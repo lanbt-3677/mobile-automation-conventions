@@ -27,7 +27,8 @@ Responsibilities:
 - **TestNG suite XML and runner** start Cucumber under TestNG. The suite selects the runner; Maven/CI configuration supplies the Cucumber tag expression and other run parameters. Keep runner code minimal; do not create a runner for every scenario.
 - **Hooks** create and close the driver session, prepare a known state, and collect safe diagnostics after a failure. They should not contain business-flow steps.
 - **Step definitions** translate Gherkin into high-level screen actions and assertions. Keep them short; move repeated UI logic elsewhere.
-- **Screen/page objects and components** own locators and interactions for one screen, dialog, or reusable UI area.
+- **BaseScreen** owns the common UI operations used by screens and components, including driver access, explicit-wait helpers, element lookup, scrolling, keyboard handling, and safe diagnostics.
+- **Screen/page objects and components** extend or use `BaseScreen` and own only locators and interactions for one screen, dialog, or reusable UI area.
 - **Framework services** own driver lifecycle, waits, capabilities, configuration loading, test-data helpers, logging, and report attachments.
 - **Reporting** turns execution output into the chosen test report and keeps its raw results/attachments available to CI.
 - **CI** chooses the suite, target environment, device, app build, secrets, and artifact retention.
@@ -39,7 +40,9 @@ src/
 ├── main/java/.../
 │   ├── config/          # typed configuration, validation, environment resolution
 │   ├── driver/          # driver factory, capabilities, driver lifecycle
-│   ├── screen/          # screen/page objects and reusable UI components
+│   ├── screen/
+│   │   ├── BaseScreen.java    # common UI actions, waits, scrolling, diagnostics
+│   │   └── ...Screen.java     # screen-specific locators and business UI actions
 │   └── data/            # non-secret test-data models
 ├── test/java/.../
 │   ├── cucumber/hooks/  # scenario setup, teardown, safe diagnostics
@@ -58,6 +61,17 @@ src/
 ├── azure-pipelines.yml   # Azure DevOps, when Azure DevOps is the selected CI platform
 └── Jenkinsfile           # Jenkins, when Jenkins is the selected CI platform
 ```
+
+## BaseScreen Convention
+
+Every screen object and reusable component must inherit from, or compose, `BaseScreen`. Keep framework-wide UI mechanics in this class so they are implemented, configured, and diagnosed consistently. Typical responsibilities include:
+
+- access to the current driver and shared explicit waits;
+- finding an element, waiting for it to be visible/clickable/gone, and performing guarded tap, type, clear, and text-read actions;
+- scrolling or swiping to a known element, hiding the keyboard, and handling platform-common UI actions;
+- timeout diagnostics such as current activity, safe screenshot/page-source capture, and Appium-log correlation.
+
+`BaseScreen` must not contain screen-specific locators, product assertions, or business-flow methods. Those belong in the relevant screen or component class. Step definitions call high-level screen methods; they must not repeat low-level Appium interactions that belong in `BaseScreen`.
 
 ## Configuration and Secrets
 
@@ -96,6 +110,11 @@ Locator quality is the largest driver of mobile-test stability. Use this prefere
 3. Visible text only when that exact text is part of the product requirement and is not expected to change with copy updates or localization.
 4. A narrowly scoped native selector based on a stable parent/child relationship when there is no identifier. Document the locator debt and ask for an identifier.
 5. XPath only as a last, constrained fallback; never use a full absolute hierarchy path.
+
+Locators cannot be predicted or guessed from a screen name, code convention, visible UI, or a previous app version. Verify every locator against the running application before adding it to automation:
+
+- When working manually, inspect the target element with **Appium Inspector** and copy/validate the actual available attributes.
+- When working through an agent, use the **Appium MCP** to inspect the live UI and obtain the locator attributes.
 
 Do not use:
 
