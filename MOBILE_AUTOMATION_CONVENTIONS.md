@@ -142,3 +142,26 @@ Before merge:
  - No duplicated logic between steps and screens.
  - Tags and test data are correct; cleanup is in place.
  - Known locator or device limitations are documented.
+
+## CI Setup
+
+- **Store the pipeline file in the test repository.** Review pipeline changes in a pull request, the same way as test code.
+- **Use one pipeline for all test runs.** Choose what to run with parameters: suite, environment, and app build.
+- **Download the app (APK) from where the developers publish their builds.** Do not save APK files in the test repository. They are large, and they quickly become outdated.
+- **Let only one pipeline use a device at a time.** If two pipelines use the same phone, they break each other's tests.
+- **Name each CI secret the same as its config key**, in uppercase with `_` instead of `.`: `qa.standard.password` becomes `QA_STANDARD_PASSWORD`. Make sure CI hides secret values in logs.
+
+Stages: fast checks (compile, dry run) → environment check (Appium `/status`, `adb devices`) → run suite → publish results (always) → clean up.
+
+| Trigger | Suite | Blocks merge / release? |
+| --- | --- | --- |
+| Pull request | Smoke | Yes |
+| Nightly or manual trigger | Regression | No; failures notify the team |
+| Release candidate | Smoke on the release build | Yes |
+| Manual | Any suite or tag | No |
+
+Rules:
+
+- Show the suite, tags, app version and device in the run name or summary.
+- Set a job timeout, so a hung session does not block the runner.
+- Keep artifacts for 14 to 30 days.
