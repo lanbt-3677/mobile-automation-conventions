@@ -2,6 +2,40 @@
 
 This document defines reusable engineering conventions for Android mobile automation projects built with Appium, Java, Maven, Cucumber, and TestNG.
 
+## Readiness Checklist (Before Starting Automation)
+**Scope and requirements**
+
+- Test cases selected for automation are stable, repeatable and high value (smoke and main regression flows first).
+- Each selected test case has clear acceptance criteria and expected results.
+- Out-of-scope items are listed (for example: maps, camera).
+- Supported Android versions and device models are agreed.
+
+**App build**
+
+- A build (APK) is available, with a known way to get the latest one (pipeline artifact or store link).
+-`appPackage` and the launch `appActivity` are known.
+- The QA build is automation-friendly
+- The build version is visible so it can be recorded in reports.
+
+**Environment and data**
+
+- Dedicated QA accounts exist for each role, with one account per parallel thread.
+- A test data catalogue exists (which account and data to use for which scenario).
+- A cleanup or data reset method exists (API, SQL script, or a documented manual process).
+
+**Devices**
+
+- Devices or emulator.
+- Each device: Developer options and USB debugging on.
+- Each device: language and region fixed, Play Store auto-update off.
+- Cloud devices (for example BrowserStack): account, access keys.
+
+**Local tools**
+
+- JDK, Maven, Node.js, Appium 2, UiAutomator2 driver and Android SDK platform-tools installed.
+- `adb devices` shows each device as `device`.
+- Appium Inspector connects and shows the app's elements.
+
 ## Recommended Architecture
 
 ```text
